@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
     DndContext,
     DragOverlay,
@@ -76,14 +77,12 @@ export const BoardView = ({ tasks, workspaceId, listId }: BoardViewProps) => {
                 )
             );
 
-            // Server Update
-            import("@/actions/update-task").then(({ updateTask }) => {
-                updateTask({
-                    id: activeId,
-                    workspaceId,
-                    status: newStatus
-                });
-            });
+            // Persist update
+            // (Don't block UI; we already did an optimistic update.)
+            void supabase
+                .from("tasks")
+                .update({ status: newStatus })
+                .eq("id", activeId);
         }
     };
 
