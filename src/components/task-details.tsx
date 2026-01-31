@@ -21,7 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
+ import { supabase } from "@/integrations/supabase/client";
 import { Subtasks } from "@/components/subtasks";
 import { CustomFieldsSectionLoader } from "@/components/custom-fields-section-loader";
 import { CommentsLoader } from "@/components/comments-loader";

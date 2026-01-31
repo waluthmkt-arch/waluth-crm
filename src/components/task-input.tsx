@@ -4,7 +4,7 @@
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+ import { supabase } from "@/integrations/supabase/client";
 
 interface TaskInputProps {
     listId: string;

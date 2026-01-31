@@ -3,7 +3,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, ChevronRight, Circle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
