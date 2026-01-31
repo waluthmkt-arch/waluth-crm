@@ -1,6 +1,6 @@
  import { useEffect, useState } from "react";
  import { useParams, useNavigate, useLocation } from "react-router-dom";
- import { supabase } from "@/lib/supabase";
+ import { supabase } from "@/integrations/supabase/client";
  import { useAuth } from "@/hooks/useAuth";
  import { NavigationRail } from "@/components/navigation-rail";
  import { Sidebar } from "@/components/sidebar";

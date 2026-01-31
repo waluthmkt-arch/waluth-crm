@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Send, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
+ import { supabase } from "@/integrations/supabase/client";
 
 interface CommentsSectionProps {
     taskId: string;
