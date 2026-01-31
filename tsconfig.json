@@ -27,11 +27,18 @@
     "node_modules",
 
     "src/app/**",
+    "src/app.disabled/**",
     "src/actions/**",
+    "src/lib/data/**",
 
     "src/auth.ts",
+    "src/auth.disabled.ts",
     "src/auth.config.ts",
+    "src/auth.config.disabled.ts",
     "src/middleware.ts",
+    "src/middleware.disabled.ts",
     "src/lib/db.ts"
+    ,"src/lib/db.disabled.ts"
+    ,"src/lib/auth.disabled.ts"
   ]
 }
