@@ -2,16 +2,33 @@
  import { useNavigate } from "react-router-dom";
  import { Button } from "@/components/ui/button";
  import { useAuth } from "@/hooks/useAuth";
+ import { supabase } from "@/lib/supabase";
  
  export default function HomePage() {
    const navigate = useNavigate();
    const { user } = useAuth();
  
    useEffect(() => {
+     const checkWorkspace = async () => {
+       if (!user) return;
+
+       // Check if user has any workspace
+       const { data: member } = await supabase
+         .from("workspace_members")
+         .select("workspace_id")
+         .eq("user_id", user.id)
+         .limit(1)
+         .maybeSingle();
+
+       if (member) {
+         navigate(`/workspace/${member.workspace_id}`);
+       } else {
+         navigate("/create-workspace");
+       }
+     };
+
      if (user) {
-       // Redirect to workspace if user is logged in
-       // (We'll implement workspace fetching later)
-       navigate("/create-workspace");
+       checkWorkspace();
      }
    }, [user, navigate]);
  

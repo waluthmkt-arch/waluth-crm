@@ -1,31 +1,15 @@
 
-"use client";
-
-import { useState, useTransition, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+ import { useState, useEffect } from "react";
+ import { Link, useNavigate } from "react-router-dom";
 import {
     MoreHorizontal,
     Folder as FolderIcon,
     List as ListIcon,
     Plus,
     ChevronRight,
-    ChevronDown
 } from "lucide-react";
 
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger
-} from "@/components/ui/accordion";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CreateFolderDialog } from "@/components/create-folder-dialog";
 import { CreateListDialog } from "@/components/create-list-dialog";
 import { SidebarContextMenu } from "@/components/sidebar-context-menu";
@@ -33,11 +17,11 @@ import { RenameDialog } from "@/components/rename-dialog";
 import { DeleteDialog } from "@/components/delete-dialog";
 import { ColorIconPickerDialog } from "@/components/color-icon-picker-dialog";
 import { StatusManagerDialog } from "@/components/status-manager-dialog";
-import { toggleFavorite } from "@/actions/toggle-favorite";
-import { renameItem } from "@/actions/rename-item";
-import { deleteItem } from "@/actions/delete-item";
-import { updateColorIcon } from "@/actions/update-color-icon";
-import { updateStatuses } from "@/actions/update-statuses";
+ import { toggleFavorite } from "@/lib/actions/toggle-favorite";
+ import { renameItem } from "@/lib/actions/rename-item";
+ import { deleteItem } from "@/lib/actions/delete-item";
+ import { updateColorIcon } from "@/lib/actions/update-color-icon";
+ import { updateStatuses } from "@/lib/actions/update-statuses";
 import { CustomFieldsDialog } from "@/components/custom-fields-dialog";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { cn } from "@/lib/utils";
@@ -47,8 +31,7 @@ interface SidebarItemProps {
 }
 
 export const SidebarItem = ({ space }: SidebarItemProps) => {
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+     const navigate = useNavigate();
     const [createFolderOpen, setCreateFolderOpen] = useState(false);
     const [createListOpen, setCreateListOpen] = useState(false);
     const [targetFolderId, setTargetFolderId] = useState<string | undefined>(undefined);
@@ -78,20 +61,18 @@ export const SidebarItem = ({ space }: SidebarItemProps) => {
 
     // Handlers for Space actions
     const handleFavorite = () => {
-        startTransition(() => {
-            toggleFavorite({ id: space.id, type: "space", workspaceId: space.workspaceId })
-                .then(() => router.refresh());
-        });
+         toggleFavorite({ id: space.id, type: "space", workspaceId: space.workspaceId })
+             .then(() => window.location.reload());
     };
 
     const handleRename = (newName: string) => {
         return renameItem({ id: space.id, type: "space", name: newName, workspaceId: space.workspaceId })
-            .then(() => router.refresh());
+             .then(() => window.location.reload());
     };
 
     const handleDelete = () => {
         return deleteItem({ id: space.id, type: "space", workspaceId: space.workspaceId })
-            .then(() => router.refresh());
+             .then(() => navigate(-1));
     };
 
     // Optimistic states
@@ -102,7 +83,7 @@ export const SidebarItem = ({ space }: SidebarItemProps) => {
         setOptimisticColor(color);
         setOptimisticIcon(icon);
         return updateColorIcon({ id: space.id, type: "space", color, icon, workspaceId: space.workspaceId })
-            .then(() => router.refresh())
+             .then(() => window.location.reload())
             .catch(() => {
                 // Revert on failure
                 setOptimisticColor(space.color);
@@ -112,7 +93,7 @@ export const SidebarItem = ({ space }: SidebarItemProps) => {
 
     const handleStatusUpdate = (statuses: any[]) => {
         return updateStatuses({ entityId: space.id, entityType: "space", statuses, workspaceId: space.workspaceId })
-            .then(() => router.refresh());
+             .then(() => window.location.reload());
     };
 
     return (
@@ -171,7 +152,7 @@ export const SidebarItem = ({ space }: SidebarItemProps) => {
                             {space.lists.map((list: any) => (
                                 <div key={list.id} className="group/list relative flex items-center">
                                     <Link
-                                        href={`/workspace/${space.workspaceId}/list/${list.id}`}
+                                       to={`/workspace/${space.workspaceId}/list/${list.id}`}
                                         className="flex-1 flex items-center gap-2 py-1.5 px-2 hover:bg-gray-800 rounded-md cursor-pointer text-sm text-gray-300"
                                     >
                                         <ListIcon className="h-3 w-3" />
