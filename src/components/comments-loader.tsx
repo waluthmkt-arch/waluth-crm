@@ -2,20 +2,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCommentsAction } from "@/actions/get-comments-action";
+import { supabase } from "@/lib/supabase";
 import { CommentsSection } from "@/components/comments-section";
 
 export const CommentsLoader = ({ taskId, workspaceId }: any) => {
     const [comments, setComments] = useState<any[]>([]);
 
     useEffect(() => {
-        getCommentsAction(taskId).then(setComments);
+        let cancelled = false;
+
+        const fetchComments = async () => {
+            const { data } = await supabase
+                .from("comments")
+                .select("*, user:profiles(id,name,image)")
+                .eq("task_id", taskId)
+                .order("created_at", { ascending: true });
+
+            if (!cancelled) setComments(data || []);
+        };
+
+        void fetchComments();
+
         // Polling for real-time simulation
         const interval = setInterval(() => {
-            getCommentsAction(taskId).then(setComments);
+            void fetchComments();
         }, 5000);
 
-        return () => clearInterval(interval);
+        return () => {
+            cancelled = true;
+            clearInterval(interval);
+        };
     }, [taskId]);
 
     return (

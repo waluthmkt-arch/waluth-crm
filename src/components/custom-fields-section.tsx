@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
-import { setCustomFieldValue } from "@/actions/set-custom-field-value";
+import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -61,12 +61,28 @@ const FieldValueInput = ({ field, taskId, workspaceId, initialValue }: { field: 
     const handleSave = (newValue: string) => {
         setValue(newValue);
         startTransition(() => {
-            setCustomFieldValue({
-                taskId,
-                fieldId: field.id,
-                value: newValue,
-                workspaceId
-            });
+            void (async () => {
+                // update-or-insert (since there isn't necessarily a unique constraint for upsert)
+                const { data: existing } = await supabase
+                    .from("custom_field_values")
+                    .select("id")
+                    .eq("task_id", taskId)
+                    .eq("field_id", field.id)
+                    .maybeSingle();
+
+                if (existing?.id) {
+                    await supabase
+                        .from("custom_field_values")
+                        .update({ value: newValue })
+                        .eq("id", existing.id);
+                } else {
+                    await supabase
+                        .from("custom_field_values")
+                        .insert({ task_id: taskId, field_id: field.id, value: newValue ?? null });
+                }
+
+                void workspaceId; // currently unused; kept for API compatibility
+            })();
         });
     };
 

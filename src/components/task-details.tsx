@@ -21,7 +21,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { updateTask } from "@/actions/update-task";
+import { supabase } from "@/lib/supabase";
 import { Subtasks } from "@/components/subtasks";
 import { CustomFieldsSectionLoader } from "@/components/custom-fields-section-loader";
 import { CommentsLoader } from "@/components/comments-loader";
@@ -63,13 +63,10 @@ export const TaskDetails = ({
 
     const handleUpdate = (data: any) => {
         startTransition(() => {
-            updateTask({
-                id: task.id,
-                workspaceId,
-                ...data
-            }).then(() => {
-                // Toast logic here
-            });
+            void (async () => {
+                await supabase.from("tasks").update(data).eq("id", task.id);
+                void workspaceId; // currently unused; kept for API compatibility
+            })();
         });
     }
 

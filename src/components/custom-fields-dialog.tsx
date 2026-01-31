@@ -5,10 +5,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
-import { createCustomField } from "@/actions/create-custom-field";
 import {
     Dialog,
     DialogContent,
@@ -35,8 +35,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
-
-import { deleteCustomField } from "@/actions/delete-custom-field";
 import { FIELD_TYPES } from "@/lib/field-types";
 import { EditCustomFieldDialog } from "@/components/edit-custom-field-dialog";
 import * as Icons from "lucide-react";
@@ -59,7 +57,7 @@ export const CustomFieldsDialog = ({
     trigger,
     existingFields = []
 }: CustomFieldsDialogProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | undefined>("");
@@ -81,30 +79,64 @@ export const CustomFieldsDialog = ({
         setSuccess("");
 
         startTransition(() => {
-            createCustomField({ ...values, listId, workspaceId })
-                .then((data) => {
-                    if (data?.error) {
-                        setError(data.error);
-                    } else if (data?.success) {
-                        setSuccess(data.success);
-                        router.refresh();
-                        form.reset();
+            void (async () => {
+                try {
+                    const { data: auth } = await supabase.auth.getUser();
+                    const userId = auth.user?.id;
+
+                    if (!userId) {
+                        setError("You must be logged in to create custom fields.");
+                        return;
                     }
-                })
-                .catch(() => setError("Something went wrong!"));
+
+                    const { error } = await supabase
+                        .from("custom_fields")
+                        .insert({
+                            name: values.name,
+                            type: values.type,
+                            list_id: listId,
+                            created_by: userId,
+                            pinned: false,
+                            required: false,
+                            hide_empty: false,
+                            visibility: "all",
+                        })
+                        .select("id")
+                        .single();
+
+                    if (error) {
+                        setError(error.message);
+                        return;
+                    }
+
+                    void workspaceId; // currently unused; kept for API compatibility
+                    setSuccess("Custom field created");
+                    form.reset();
+                    navigate(0);
+                } catch {
+                    setError("Something went wrong!");
+                }
+            })();
         });
     };
 
     const handleDelete = (fieldId: string) => {
         startDeleteTransition(() => {
-            deleteCustomField({ id: fieldId, listId, workspaceId })
-                .then((data) => {
-                    if (data?.error) {
-                        setError(data.error);
-                    } else {
-                        router.refresh();
-                    }
-                });
+            void (async () => {
+                const { error } = await supabase
+                    .from("custom_fields")
+                    .delete()
+                    .eq("id", fieldId)
+                    .eq("list_id", listId);
+
+                if (error) {
+                    setError(error.message);
+                    return;
+                }
+
+                void workspaceId;
+                navigate(0);
+            })();
         });
     };
 

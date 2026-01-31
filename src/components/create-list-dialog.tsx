@@ -5,10 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
-
-import { createList } from "@/actions/create-list";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import {
     Dialog,
     DialogContent,
@@ -45,7 +43,7 @@ export const CreateListDialog = ({
     open,
     setOpen
 }: CreateListDialogProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
@@ -62,18 +60,31 @@ export const CreateListDialog = ({
         setSuccess("");
 
         startTransition(() => {
-            createList({ ...values, spaceId, folderId })
-                .then((data) => {
-                    if (data?.error) {
-                        setError(data.error);
-                    } else if (data?.success) {
-                        setSuccess(data.success);
-                        setOpen(false);
-                        router.refresh();
-                        form.reset();
+            void (async () => {
+                try {
+                    const { error } = await supabase
+                        .from("lists")
+                        .insert({
+                            name: values.name,
+                            space_id: spaceId,
+                            folder_id: folderId ?? null,
+                        })
+                        .select("id")
+                        .single();
+
+                    if (error) {
+                        setError(error.message);
+                        return;
                     }
-                })
-                .catch(() => setError("Something went wrong!"));
+
+                    setSuccess("List created");
+                    setOpen(false);
+                    form.reset();
+                    navigate(0);
+                } catch {
+                    setError("Something went wrong!");
+                }
+            })();
         });
     };
 
