@@ -5,6 +5,9 @@ import path from "node:path";
 // Minimal Vite setup to boot the React app.
 export default defineConfig({
   plugins: [react()],
+  server: {
+    port: 8080,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
