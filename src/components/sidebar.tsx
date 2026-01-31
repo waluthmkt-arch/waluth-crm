@@ -1,7 +1,4 @@
 
-"use client";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarItem } from "@/components/sidebar-item";
 import { CreateSpaceDialog } from "@/components/create-space-dialog";
 import { Search, Plus } from "lucide-react";

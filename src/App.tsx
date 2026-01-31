@@ -3,6 +3,7 @@
  import LoginPage from "@/pages/LoginPage";
  import RegisterPage from "@/pages/RegisterPage";
  import CreateWorkspacePage from "@/pages/CreateWorkspacePage";
+ import WorkspacePage from "@/pages/WorkspacePage";
  import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function App() {
@@ -19,7 +20,14 @@ export default function App() {
            </ProtectedRoute>
          }
        />
-       {/* TODO: Add workspace routes after migration */}
+       <Route
+         path="/workspace/:workspaceId/*"
+         element={
+           <ProtectedRoute>
+             <WorkspacePage />
+           </ProtectedRoute>
+         }
+       />
      </Routes>
   );
 }

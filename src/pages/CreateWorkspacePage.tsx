@@ -4,6 +4,7 @@
  import { useState } from "react";
  import { useNavigate } from "react-router-dom";
  import { supabase } from "@/lib/supabase";
+ import { useAuth } from "@/hooks/useAuth";
  
  import { Button } from "@/components/ui/button";
  import {
@@ -25,6 +26,7 @@
  
  export default function CreateWorkspacePage() {
    const navigate = useNavigate();
+   const { user } = useAuth();
    const [isPending, setIsPending] = useState(false);
    const [error, setError] = useState<string | undefined>("");
    const [success, setSuccess] = useState<string | undefined>("");
@@ -41,13 +43,48 @@
      setSuccess("");
      setIsPending(true);
  
-     // TODO: Create workspace via Supabase (after migration)
-     // For now, just show success and navigate
-     setSuccess("Workspace creation will be implemented after database migration.");
+     if (!user) {
+       setError("You must be logged in to create a workspace.");
+       setIsPending(false);
+       return;
+     }
+
+     // Create workspace
+     const { data: workspace, error: workspaceError } = await supabase
+       .from("workspaces")
+       .insert({
+         name: values.name,
+         owner_id: user.id,
+       })
+       .select()
+       .single();
+
+     if (workspaceError) {
+       setError(workspaceError.message);
+       setIsPending(false);
+       return;
+     }
+
+     // Add owner as member
+     const { error: memberError } = await supabase
+       .from("workspace_members")
+       .insert({
+         workspace_id: workspace.id,
+         user_id: user.id,
+         role: "OWNER",
+       });
+
+     if (memberError) {
+       setError(memberError.message);
+       setIsPending(false);
+       return;
+     }
+
+     setSuccess("Workspace created!");
      setIsPending(false);
  
      setTimeout(() => {
-       // navigate(`/workspace/${workspaceId}`);
+       navigate(`/workspace/${workspace.id}`);
      }, 1000);
    };
  

@@ -61,6 +61,7 @@
      } else {
        setSuccess("Registration successful! Please check your email to verify your account.");
        setIsPending(false);
+       setTimeout(() => navigate("/login"), 2000);
      }
    };
  

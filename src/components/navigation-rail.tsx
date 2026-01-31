@@ -1,17 +1,10 @@
 
-"use client";
-
 import {
     Home,
     Bell,
     CheckCircle2,
-    Users,
-    FileText,
-    Search,
-    Plus,
-    Settings,
-    HelpCircle,
     LayoutGrid
+ ,   FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

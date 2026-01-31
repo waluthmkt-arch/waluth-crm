@@ -1,20 +1,18 @@
 
-"use client";
-
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export const ViewSwitcher = () => {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+     const navigate = useNavigate();
+     const location = useLocation();
 
-    const currentView = searchParams.get("view") || "list";
+     const searchParams = new URLSearchParams(location.search);
+     const currentView = searchParams.get("view") || "list";
 
     const setView = (view: string) => {
-        const params = new URLSearchParams(searchParams as any);
+         const params = new URLSearchParams(location.search);
         params.set("view", view);
-        router.push(`${pathname}?${params.toString()}`);
+         navigate(`${location.pathname}?${params.toString()}`);
     };
 
     return (

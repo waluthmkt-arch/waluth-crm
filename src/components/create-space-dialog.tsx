@@ -1,14 +1,11 @@
 
-"use client";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+ import { useState } from "react";
 import { Plus } from "lucide-react";
 
-import { createSpace } from "@/actions/create-space";
+ import { createSpace } from "@/lib/actions/create-space";
 import {
     Dialog,
     DialogContent,
@@ -46,12 +43,10 @@ const CreateSpaceSchema = z.object({
 
 export const CreateSpaceDialog = ({
     workspaceId,
-    trigger
 }: CreateSpaceDialogProps) => {
-    const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [isPending, startTransition] = useTransition();
-    const [color, setColor] = useState("#3b82f6");
+     const [isPending, setIsPending] = useState(false);
+     const color = "#3b82f6";
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
 
@@ -65,21 +60,24 @@ export const CreateSpaceDialog = ({
     const onSubmit = (values: z.infer<typeof CreateSpaceSchema>) => {
         setError("");
         setSuccess("");
+         setIsPending(true);
 
-        startTransition(() => {
-            createSpace({ ...values, workspaceId, color })
-                .then((data) => {
-                    if (data?.error) {
-                        setError(data.error);
-                    } else if (data?.success) {
-                        setSuccess(data.success);
-                        setOpen(false);
-                        router.refresh();
-                        form.reset();
-                    }
-                })
-                .catch(() => setError("Something went wrong"));
-        });
+         createSpace({ ...values, workspaceId, color })
+             .then((data) => {
+                 if (data?.error) {
+                     setError(data.error);
+                 } else if (data?.success) {
+                     setSuccess(data.success);
+                     setOpen(false);
+                     window.location.reload();
+                     form.reset();
+                 }
+                 setIsPending(false);
+             })
+             .catch(() => {
+                 setError("Something went wrong");
+                 setIsPending(false);
+             });
     };
 
     return (
