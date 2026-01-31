@@ -3,8 +3,8 @@
 
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { createTask } from "@/actions/create-task";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface TaskInputProps {
     listId: string;
@@ -12,7 +12,7 @@ interface TaskInputProps {
 }
 
 export const TaskInput = ({ listId, workspaceId }: TaskInputProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isPending, startTransition] = useTransition();
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState("");
@@ -29,14 +29,14 @@ export const TaskInput = ({ listId, workspaceId }: TaskInputProps) => {
         setValue(""); // Optimistic clear
 
         startTransition(() => {
-            createTask({ name, listId, workspaceId })
-                .then((data) => {
-                    if (data?.error) {
-                        // Handle error (maybe toast)
-                    } else {
-                        router.refresh();
-                    }
-                })
+            // workspaceId is currently not needed for the tasks table; kept for API compatibility.
+            void workspaceId;
+            supabase
+                .from("tasks")
+                .insert({ name, list_id: listId })
+                .then(({ error }) => {
+                    if (!error) navigate(0);
+                });
         });
     };
 

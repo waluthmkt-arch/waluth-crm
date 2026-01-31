@@ -3,7 +3,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, ChevronRight, Circle } from "lucide-react";
-import { createTask } from "@/actions/create-task";
+import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -35,17 +35,19 @@ export const Subtasks = ({ taskId, listId, workspaceId, existingSubtasks }: Subt
         setSubtasks([...subtasks, { id: tempId, name, status: "TODO" }]);
 
         startTransition(() => {
-            createTask({
-                name,
-                listId,
-                workspaceId,
-                parentId: taskId
-            }).then((data) => {
-                if (data?.task) {
-                    // Replace temp task with real one
-                    setSubtasks(prev => prev.map(t => t.id === tempId ? data.task : t));
+            void (async () => {
+                const { data, error } = await supabase
+                    .from("tasks")
+                    .insert({ name, list_id: listId, parent_id: taskId })
+                    .select("*")
+                    .single();
+
+                void workspaceId; // currently unused; kept for API compatibility
+
+                if (!error && data) {
+                    setSubtasks((prev) => prev.map((t) => (t.id === tempId ? data : t)));
                 }
-            });
+            })();
         });
 
         // Keep input open for rapid entry

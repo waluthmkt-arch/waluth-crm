@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-
-import { createFolder } from "@/actions/create-folder";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 import {
     Dialog,
     DialogContent,
@@ -42,7 +41,7 @@ export const CreateFolderDialog = ({
     open,
     setOpen
 }: CreateFolderDialogProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
@@ -59,18 +58,27 @@ export const CreateFolderDialog = ({
         setSuccess("");
 
         startTransition(() => {
-            createFolder({ ...values, spaceId })
-                .then((data) => {
-                    if (data?.error) {
-                        setError(data.error);
-                    } else if (data?.success) {
-                        setSuccess(data.success);
-                        setOpen(false);
-                        router.refresh();
-                        form.reset();
+            void (async () => {
+                try {
+                    const { error } = await supabase
+                        .from("folders")
+                        .insert({ name: values.name, space_id: spaceId })
+                        .select("id")
+                        .single();
+
+                    if (error) {
+                        setError(error.message);
+                        return;
                     }
-                })
-                .catch(() => setError("Something went wrong!"));
+
+                    setSuccess("Folder created");
+                    setOpen(false);
+                    form.reset();
+                    navigate(0);
+                } catch {
+                    setError("Something went wrong!");
+                }
+            })();
         });
     };
 

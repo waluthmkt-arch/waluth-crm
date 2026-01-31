@@ -6,7 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Send, User as UserIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { createComment } from "@/actions/create-comment";
+import { supabase } from "@/lib/supabase";
 
 interface CommentsSectionProps {
     taskId: string;
@@ -22,10 +22,18 @@ export const CommentsSection = ({ taskId, workspaceId, comments }: CommentsSecti
         if (!content.trim()) return;
 
         startTransition(() => {
-            createComment({ taskId, workspaceId, content })
-                .then(() => {
-                    setContent("");
-                });
+            void (async () => {
+                const { data: auth } = await supabase.auth.getUser();
+                const userId = auth.user?.id;
+                if (!userId) return;
+
+                await supabase
+                    .from("comments")
+                    .insert({ task_id: taskId, user_id: userId, content });
+
+                void workspaceId; // currently unused; kept for API compatibility
+                setContent("");
+            })();
         });
     };
 
@@ -43,7 +51,7 @@ export const CommentsSection = ({ taskId, workspaceId, comments }: CommentsSecti
                         <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-semibold">{comment.user?.name || "Unknown"}</span>
-                                <span className="text-[10px] text-gray-500">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
+                                <span className="text-[10px] text-gray-500">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
                             </div>
                             <div className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1E1E1E] p-2 rounded-md shadow-sm border">
                                 {comment.content}

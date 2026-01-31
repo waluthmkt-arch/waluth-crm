@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { FIELD_TYPES, CURRENCIES, FieldType } from "@/lib/field-types";
-import { updateCustomField } from "@/actions/update-custom-field";
+import { supabase } from "@/lib/supabase";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import * as Icons from "lucide-react";
@@ -24,7 +24,7 @@ interface EditCustomFieldDialogProps {
 }
 
 export const EditCustomFieldDialog = ({ open, setOpen, field, workspaceId }: EditCustomFieldDialogProps) => {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | undefined>("");
     const [success, setSuccess] = useState<string | undefined>("");
@@ -44,26 +44,35 @@ export const EditCustomFieldDialog = ({ open, setOpen, field, workspaceId }: Edi
         setSuccess("");
 
         startTransition(() => {
-            updateCustomField({
-                id: field.id,
-                name,
-                description,
-                type,
-                currency: type === "CURRENCY" ? currency : undefined,
-                required,
-                pinned,
-                hideEmpty,
-                visibility: visibility as "all" | "limited" | "private",
-                workspaceId
-            }).then((data) => {
-                if (data?.error) {
-                    setError(data.error);
-                } else if (data?.success) {
-                    setSuccess(data.success);
-                    router.refresh();
-                    setTimeout(() => setOpen(false), 1000);
+            void (async () => {
+                try {
+                    const { error } = await supabase
+                        .from("custom_fields")
+                        .update({
+                            name,
+                            description,
+                            type,
+                            currency: type === "CURRENCY" ? currency : null,
+                            required,
+                            pinned,
+                            hide_empty: hideEmpty,
+                            visibility,
+                        })
+                        .eq("id", field.id);
+
+                    if (error) {
+                        setError(error.message);
+                        return;
+                    }
+
+                    void workspaceId; // currently unused; kept for API compatibility
+                    setSuccess("Saved");
+                    navigate(0);
+                    setTimeout(() => setOpen(false), 300);
+                } catch {
+                    setError("Something went wrong!");
                 }
-            }).catch(() => setError("Something went wrong!"));
+            })();
         });
     };
 
