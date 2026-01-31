@@ -40,9 +40,11 @@ export const DeleteDialog = ({ open, setOpen, title, description, onConfirm }: D
                         className="bg-red-600 hover:bg-red-700"
                         onClick={(e) => {
                             e.preventDefault();
-                            startTransition(async () => {
-                                await onConfirm();
-                                setOpen(false);
+                            startTransition(() => {
+                                void (async () => {
+                                    await onConfirm();
+                                    setOpen(false);
+                                })();
                             });
                         }}
                     >

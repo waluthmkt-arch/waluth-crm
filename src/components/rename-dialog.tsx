@@ -19,9 +19,11 @@ export const RenameDialog = ({ open, setOpen, initialName, onConfirm }: RenameDi
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        startTransition(async () => {
-            await onConfirm(name);
-            setOpen(false);
+        startTransition(() => {
+            void (async () => {
+                await onConfirm(name);
+                setOpen(false);
+            })();
         });
     };
 
