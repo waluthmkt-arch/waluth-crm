@@ -20,11 +20,18 @@
     }
   },
   "include": [
-     "src",
-    "**/*.ts",
-     "**/*.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+
+    "src/app/**",
+    "src/actions/**",
+
+    "src/auth.ts",
+    "src/auth.config.ts",
+    "src/middleware.ts",
+    "src/lib/db.ts"
   ]
 }
